@@ -101,4 +101,19 @@ if systemctl is-active --quiet snell; then
     echo "PSK: $PSK"
 else
     echo "Snell 服务启动失败"
+    exit 1
 fi
+
+# 获取本机IP地址
+LOCAL_IP=$(hostname -I | awk '{print $1}')
+if [ -z "$LOCAL_IP" ]; then
+    LOCAL_IP="无法检测到本机IP，请检查网络设置"
+fi
+
+# 显示安装成功信息
+echo "=========================================="
+echo "Snell 服务安装成功!"
+echo "本机IP: $LOCAL_IP"
+echo "端口: $PORT"
+echo "PSK: $PSK"
+echo "=========================================="
