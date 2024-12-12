@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 # 默认值
 DEFAULT_PORT=11086
 DEFAULT_PSK="100a6d37-3dd3-bd42-6235-79961247ea9a"
@@ -25,7 +27,7 @@ fi
 if [[ ! "$PORT" =~ ^[0-9]+$ || "$PORT" -lt 1 || "$PORT" -gt 65535 ]]; then
     echo "Error: Port must be a number between 1 and 65535"
     exit 1
-}
+fi
 
 # 确保脚本以root权限运行
 if [ "$(id -u)" != "0" ]; then
@@ -33,7 +35,8 @@ if [ "$(id -u)" != "0" ]; then
    exit 1
 fi
 
-# 更新软件包列表并安装必要的工具
+# 安装必要的工具
+export DEBIAN_FRONTEND=noninteractive
 apt update
 apt install unzip wget -y
 
@@ -61,7 +64,7 @@ ipv6 = false
 EOL
 
 # 创建Systemd服务文件
-cat > /lib/systemd/system/snell.service << EOL
+cat > /etc/systemd/system/snell.service << EOL
 [Unit]
 Description=Snell Proxy Service
 After=network.target
@@ -84,18 +87,18 @@ EOL
 # 重新加载systemd服务
 systemctl daemon-reload
 
-# 启用开机自启
+# 启用开机自启并启动服务
 systemctl enable snell
-
-# 启动服务
 systemctl start snell
 
 # 清理下载的压缩文件
-rm snell-server-v4.1.1-linux-amd64.zip
+rm -f snell-server-v4.1.1-linux-amd64.zip
 
 # 检查服务状态
-systemctl status snell
-
-echo "Snell服务器安装完成"
-echo "端口: $PORT"
-echo "PSK: $PSK"
+if systemctl is-active --quiet snell; then
+    echo "Snell 服务启动成功"
+    echo "端口: $PORT"
+    echo "PSK: $PSK"
+else
+    echo "Snell 服务启动失败"
+fi
